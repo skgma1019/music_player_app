@@ -1,0 +1,65 @@
+# =========================
+# 1. Flutter / Dart (앱 관련)
+# =========================
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
+android/local.properties
+.vscode/
+.idea/
+
+# =========================
+# 2. Python (서버 관련)
+# =========================
+# 파이썬 컴파일 파일 (필요 없음)
+__pycache__/
+*.py[cod]
+*$py.class
+
+# 가상 환경 폴더 (매우 중요! 용량 큼)
+venv/
+env/
+.env
+
+# =========================
+# 3. 미디어 및 임시 파일 (프로젝트 특성)
+# =========================
+# 테스트용으로 넣은 노래 파일들 (저작권 문제 및 용량 문제)
+*.mp3
+*.m4a
+*.wav
+*.flac
+
+# 서버가 작업하다 만든 임시 파일들
+temp_*
+*_clean.wav
+
+# =========================
+# 4. 실행 파일 및 도구
+# =========================
+# ffmpeg 실행 파일 (깃에 올리기엔 너무 큼, 각자 설치해야 함)
+ffmpeg.exe
+ffmpeg
+*.exe
+*.dll
+*.so
+*.dylib
+
+# =========================
+# 5. OS 시스템 파일
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# 6. Node.js (혹시 모를 자바스크립트 도구용)
+# =========================
+node_modules/
+npm-debug.log
+yarn-error.log

@@ -1,0 +1,18 @@
+ai_server---------------------------------------------
+python -m venv venv
+venv\Scripts\activate
+uvicorn main:app --reload --port 8000
+
+pip install fastapi uvicorn openai-whisper python-multipart
+
+server------------------------------------------------
+npm install express multer axios form-data
+npm install cors
+
+
+
+
+0109 더 추가할 기능들
+알림창에 뜨게
+플레이리스트 형식으로 만들기
+UI/UX 개선
