@@ -1,7 +1,7 @@
 ai_server---------------------------------------------
 python -m venv venv
 venv\Scripts\activate
-uvicorn main:app --reload --port 8000
+python -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
 pip install fastapi uvicorn openai-whisper python-multipart
 
@@ -16,3 +16,12 @@ npm install cors
 알림창에 뜨게
 플레이리스트 형식으로 만들기
 UI/UX 개선
+
+
+일단 현재까지 기능들
+노래 개별 선택
+노래 언어 선택
+재생바
+뮤직 재생, 스탑
+가사 싱크기능
+가사 넣기 or AI로 가사 생성
