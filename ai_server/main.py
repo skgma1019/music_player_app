@@ -7,6 +7,9 @@ import re
 import traceback
 import subprocess
 
+# 🌍 [추가] 번역 라이브러리
+from deep_translator import GoogleTranslator
+
 app = FastAPI()
 
 # 모델 로드
@@ -58,7 +61,7 @@ def convert_to_clean_wav(input_path):
         print(f"🚨 변환 실패 (원본 사용): {e}")
         return input_path 
 
-# 🛠️ [추가] AI가 뱉은 환각(Lyrics, MBC 등) 청소하는 함수
+# 🛠️ [기존 유지] AI가 뱉은 환각(Lyrics, MBC 등) 청소하는 함수
 def clean_hallucinations(segments):
     cleaned = []
     # 지워버릴 금지어 리스트 (소문자로 작성)
@@ -122,6 +125,24 @@ def force_align_lyrics(whisper_result, user_text):
         
     return final_segments
 
+# 🌍 [추가] 번역 처리 도우미 함수
+def add_translation(segments, target_lang='ko'):
+    print("🌍 [번역 시작] Google Translate...")
+    translator = GoogleTranslator(source='auto', target=target_lang)
+    
+    for seg in segments:
+        try:
+            original = seg['text']
+            # 번역 시도
+            translated = translator.translate(original)
+            seg['translated_text'] = translated
+        except Exception as e:
+            print(f"⚠️ 번역 실패 (부분): {e}")
+            seg['translated_text'] = "" # 실패 시 빈 문자열
+            
+    print("✅ [번역 완료]")
+    return segments
+
 @app.post("/analyze")
 async def analyze_audio(
     file: UploadFile = File(...), 
@@ -150,6 +171,9 @@ async def analyze_audio(
             parsed = parse_lrc_with_timestamp(lyrics_text)
             if len(parsed) > 0:
                 print("✨ 시간 정보 포함됨 -> 바로 적용")
+                # 시간 정보가 포함된 가사도 번역 추가
+                parsed = add_translation(parsed)
+                
                 if os.path.exists(temp_filename): os.remove(temp_filename)
                 if clean_audio_path != temp_filename and os.path.exists(clean_audio_path): 
                     os.remove(clean_audio_path)
@@ -159,6 +183,9 @@ async def analyze_audio(
             raw_result = model.transcribe(clean_audio_path, language=actual_language, fp16=False)
             aligned_result = force_align_lyrics(raw_result, lyrics_text)
             
+            # 🌍 [추가] 정렬된 결과 번역
+            aligned_result = add_translation(aligned_result)
+            
             print(f"✅ 매핑 완료: 총 {len(aligned_result)}줄")
             
             if os.path.exists(temp_filename): os.remove(temp_filename)
@@ -166,30 +193,35 @@ async def analyze_audio(
                 os.remove(clean_audio_path)
             return JSONResponse(content={"segments": aligned_result})
 
-        # B. 가사 없음 (환각 방지 기능 추가됨)
+        # B. 가사 없음 (AI 받아쓰기 + 번역)
         else:
             print(f"🤖 가사 없음 -> AI 받아쓰기 모드")
             
-            # ⬇️ [수정] 환각 방지 옵션 적용
             result = model.transcribe(
                 clean_audio_path, 
                 language=actual_language,
-                initial_prompt="Hello, this is a song.", # 힌트 변경
+                initial_prompt="Hello, this is a song.", 
                 fp16=False,
-                condition_on_previous_text=False, # 앵무새 방지
-                no_speech_threshold=0.6, # 잡음 무시
-                logprob_threshold=-1.0   # 확신 없으면 버림
+                condition_on_previous_text=False, 
+                no_speech_threshold=0.6, 
+                logprob_threshold=-1.0 
             )
 
-            # ⬇️ [추가] 쓰레기 값 청소
-            result['segments'] = clean_hallucinations(result['segments'])
+            # 1. 쓰레기 값 청소
+            cleaned_segments = clean_hallucinations(result['segments'])
+            
+            # 2. 🌍 [추가] 번역 수행
+            cleaned_segments = add_translation(cleaned_segments)
+            
+            # 결과 덮어쓰기
+            result['segments'] = cleaned_segments
             
             if os.path.exists(temp_filename): os.remove(temp_filename)
             if clean_audio_path != temp_filename and os.path.exists(clean_audio_path): 
                 os.remove(clean_audio_path)
                 
             return JSONResponse(content=result)
-
+        
     except Exception as e:
         print(f"\n💥 에러 발생: {traceback.format_exc()}")
         if os.path.exists(temp_filename): os.remove(temp_filename)

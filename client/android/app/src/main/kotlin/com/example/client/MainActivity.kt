@@ -1,5 +1,4 @@
 package com.example.client
 
-import io.flutter.embedding.android.FlutterActivity
-
-class MainActivity : FlutterActivity()
+import com.ryanheise.audioservice.AudioServiceFragmentActivity
+class MainActivity : AudioServiceFragmentActivity() {}
